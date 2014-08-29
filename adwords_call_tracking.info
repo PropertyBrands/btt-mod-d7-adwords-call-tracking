@@ -1,0 +1,4 @@
+name = Google AdWords Call Tracking
+description = Provides integration with Google AdWords call tracking.
+package = Analytics
+core = 7.x

@@ -1,0 +1,77 @@
+<?php
+
+define('ADWORDS_CALL_TRACKING_PATH', drupal_get_path('module', 'adwords_call_tracking'));
+
+/**
+ * Implements hook_permission
+ */
+function adwords_call_tracking_permission() {
+  return array(
+    'administer adwords call tracking' => array(
+      'title' => t('Administer AdWords Call Tracking'),
+      'description' => t('Administer settings and tracking code for the AdWords Call Tracking service.'),
+    ),
+  );
+}
+
+/**
+ * Implements basic call tracking via Google forwarding numbers and adwords
+ */
+function adwords_call_tracking_menu() {
+  $items = array();
+  $items['admin/config/services/adwords-call-tracking'] = array(
+    'title' => 'AdWords Call Tracking',
+    'description' => 'Configure the settings for AdWords Call Tracking.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('adwords_call_tracking_settings'),
+    'access arguments' => array('administer adwords call tracking'),
+    'file' => 'adwords_call_tracking.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_page_alter
+ */
+function adwords_call_tracking_page_alter(&$page) {
+  $method = variable_get('adwords_call_tracking_default_number_source', '');
+  $css_selectors = variable_get('adwords_call_tracking_css_selectors', '');
+  $script = variable_get('adwords_call_tracking_code', '');
+  $number = '';
+  if($method == 'number') {
+    $number = variable_get('adwords_call_tracking_default_number', '');
+  } else {
+    $var = variable_get('adwords_call_tracking_default_variable', '');
+    if($var) {
+      $number = variable_get($var, '');
+    }
+  }
+  if($number && $css_selectors && $script) {
+    drupal_add_js(
+      $script,
+      array(
+        'type' => 'inline',
+        'scope' => 'header',
+      )
+    );
+    drupal_add_js(
+      array(
+       'adwords_call_tracking' => array(
+          'phone_number' => $number,
+          'css_selectors' => $css_selectors
+        )
+      ),
+      array(
+        'type' => 'setting'
+      )
+    );
+    drupal_add_js(
+      ADWORDS_CALL_TRACKING_PATH . '/js/adwords_call_tracking.js',
+      array(
+        'type' => 'file',
+        'scope' => 'footer'
+      )
+    );
+  }
+}
